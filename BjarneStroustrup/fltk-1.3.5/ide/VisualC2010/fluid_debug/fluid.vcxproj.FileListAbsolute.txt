@@ -1,0 +1,2 @@
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\fluid\fluidd.pdb
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\ide\VisualC2010\fluid_debug\fluidd.pdb

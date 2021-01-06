@@ -1,0 +1,2 @@
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\test\scrolld.pdb
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\ide\VisualC2010\scroll_debug\scrolld.pdb

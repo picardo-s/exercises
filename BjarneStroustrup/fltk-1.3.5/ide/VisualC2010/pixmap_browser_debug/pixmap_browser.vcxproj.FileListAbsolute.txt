@@ -1,0 +1,2 @@
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\test\pixmap_browserd.pdb
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\ide\VisualC2010\pixmap_browser_debug\pixmap_browserd.pdb

@@ -1,0 +1,1 @@
+When whitespace-delimited any that including newline will left the stream. when to input, first retrieved getline be that

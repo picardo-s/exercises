@@ -1,0 +1,2 @@
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\test\input_choiced.pdb
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\ide\VisualC2010\input_choice_debug\input_choiced.pdb

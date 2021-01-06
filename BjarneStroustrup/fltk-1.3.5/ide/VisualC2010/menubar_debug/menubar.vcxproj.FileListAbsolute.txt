@@ -1,0 +1,2 @@
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\test\menubard.pdb
+S:\perfect_circle\BjarneStroustrup\fltk-1.3.5\ide\VisualC2010\menubar_debug\menubard.pdb
