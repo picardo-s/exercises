@@ -343,11 +343,159 @@ Iter highest(Iter first, Iter last)
 
 //Exercise 11 ---------------------------------------------------------------------------------------------------------------------
 
+//int main()
+//{
+//	std::list<int> l{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+//	std::vector<double> v(l.size());
+//	std::copy(l.begin(), l.end(), v.begin());
+//	for (auto& elem : v)
+//		std::cout << elem << ' ';
+//}
+
+//Exercise 12 ---------------------------------------------------------------------------------------------------------------------
+
+template<typename Elem>
+struct Link
+{
+	Link* prev;
+	Link* succ;
+	Elem val;
+	Link(const Elem& v) : val{ v }, prev{ nullptr }, succ{nullptr} {};
+};
+
+template <typename Elem> 
+class List
+{
+private:
+	Link<Elem>* first;
+	Link<Elem>* current;
+public:
+	List() : current{ nullptr }, first{ nullptr } {};
+
+	class iterator
+	{
+	private:
+		Link<Elem>* curr;
+	public:
+		iterator(Link<Elem>* p) : curr{ p } {}
+		iterator& operator++() { curr = curr->succ; return *this; }
+		iterator& operator--() { curr = curr->prev; return *this; }
+		Elem& operator*() { return curr->val; }
+		bool operator==(const iterator& b) const { return curr == b.curr; };
+		bool operator!=(const iterator& b) const { return !(curr == b.curr); };
+		friend class List;
+	};
+
+	iterator begin();
+	iterator end();
+	iterator insert(iterator p, const Elem& v);
+	iterator erase(iterator p);
+	void push_back(const Elem& v);
+	void push_front(const Elem& v);
+	void pop_front();
+	void pop_back();
+	Elem& front();
+	Elem& back();
+};
+
+template<typename Elem>
+typename List<Elem>::iterator List<Elem>::begin()
+{
+	return first;
+}
+
+template<typename Elem>
+typename List<Elem>::iterator List<Elem>::end()
+{
+	return nullptr;
+}
+
+template<typename Elem>
+typename List<Elem>::iterator List<Elem>::insert(iterator p, const Elem& v)
+{
+	if (p == end()) return p;
+	Link<Elem>* temp{p.curr->succ};
+	p.curr->succ = new Link<Elem>(v);
+	p.curr->succ->prev = p.curr;
+	if (temp)
+	{
+		temp->prev = p.curr->succ;
+		p.curr->succ->succ = temp;
+	}
+	return p.curr->succ;
+}
+
+template<typename Elem>
+void List<Elem>::push_back(const Elem& v)
+{
+	if (!current)
+	{
+		current = new Link<Elem>(v);
+		first = current;
+	}
+	else
+	{
+		current->succ = new Link<Elem>(v);
+		current->succ->prev = current;
+		current = current->succ;
+	}
+}
+
+template<typename Elem>
+void List<Elem>::push_front(const Elem& v)
+{
+	Link<Elem>* new_link = new Link<Elem>(v);
+	if (!current)
+	{
+		current = new_link;
+		first = current;
+	}
+	else
+	{
+		first->prev = new_link;
+		first->prev->succ = first;
+		first = first->prev;
+	}
+}
+
+template<typename Iter>
+Iter high(Iter first, Iter last)
+{
+	Iter high = first;
+	for (Iter p = first; p != last; ++p)
+		if (*high < *p) high = p;
+	return high;
+}
+
+//void f_test_list()
+//{
+//	List<int> lst;
+//	for (int x; std::cin >> x;)
+//		lst.push_back(x);
+//	List<int>::iterator p = high(lst.begin(), lst.end());
+//	if (p == lst.end())
+//		std::cout << "Empty List";
+//	else std::cout << "The highest value in the List is " << *p;
+//}
+
 int main()
 {
-	std::list<int> l{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	std::vector<double> v(l.size());
-	std::copy(l.begin(), l.end(), v.begin());
-	for (auto& elem : v)
-		std::cout << elem << ' ';
+	List<int> l;
+	l.push_back(100);
+	l.push_back(20);
+	l.push_back(30);
+	l.push_front(3);
+	l.push_front(1);
+	l.push_front(8);
+	auto p = high(l.begin(), l.end());
+	std::cout << *p;
+	//auto p = l.begin();
+	//l.insert(p, 15);
+	//++p;
+	//l.insert(p, 18);
+	while (p != l.end())
+	{
+		std::cout << *p << ' ';
+		++p;
+	}
 }
