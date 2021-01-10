@@ -3,6 +3,7 @@
 #include <vector>
 #include <list>
 #include <memory>
+#include <chrono>
 
 //void copy(int* f1, int* e1, int* f2)
 //{
@@ -369,8 +370,9 @@ class List
 private:
 	Link<Elem>* first;
 	Link<Elem>* current;
+	int list_size;
 public:
-	List() : current{ nullptr }, first{ nullptr } {};
+	List() : current{ nullptr }, first{ nullptr }, list_size{ 0 } {};
 
 	class iterator
 	{
@@ -396,6 +398,7 @@ public:
 	void pop_back();
 	Elem& front();
 	Elem& back();
+	int size() const { return list_size; }
 };
 
 template<typename Elem>
@@ -422,7 +425,50 @@ typename List<Elem>::iterator List<Elem>::insert(iterator p, const Elem& v)
 		temp->prev = p.curr->succ;
 		p.curr->succ->succ = temp;
 	}
+	list_size++;
 	return p.curr->succ;
+}
+
+template<typename Elem>
+typename List<Elem>::iterator List<Elem>::erase(iterator p)
+{
+	if (p == end()) return p;
+	Link<Elem>* temp = p.curr->succ;
+	p.curr->prev->succ = temp;
+	if (temp)
+		temp->prev = p.curr->prev;
+	delete p.curr;
+	p.curr = nullptr;
+	list_size--;
+	return temp;
+}
+
+template<typename Elem>
+void List<Elem>::pop_front()
+{
+	if (first)
+	{
+		Link<Elem>* temp = first->succ;
+		delete first;
+		list_size--;
+		if (list_size)
+			first = temp;
+		else first = current = nullptr;
+	}
+}
+
+template<typename Elem>
+void List<Elem>::pop_back()
+{
+	if (current)
+	{
+		Link<Elem>* temp = current->prev;
+		delete current;
+		list_size--;
+		if (list_size)
+			current = temp;
+		else first = current = nullptr;
+	}
 }
 
 template<typename Elem>
@@ -439,6 +485,7 @@ void List<Elem>::push_back(const Elem& v)
 		current->succ->prev = current;
 		current = current->succ;
 	}
+	list_size++;
 }
 
 template<typename Elem>
@@ -456,6 +503,19 @@ void List<Elem>::push_front(const Elem& v)
 		first->prev->succ = first;
 		first = first->prev;
 	}
+	list_size++;
+}
+
+template<typename Elem>
+Elem& List<Elem>::front()
+{
+	return first->val;
+}
+
+template<typename Elem>
+Elem& List<Elem>::back()
+{
+	return current->val;
 }
 
 template<typename Iter>
@@ -478,24 +538,245 @@ Iter high(Iter first, Iter last)
 //	else std::cout << "The highest value in the List is " << *p;
 //}
 
+//int main()
+//{
+//	List<int> l;
+//	l.push_back(100);
+//	l.push_back(20);
+//	l.push_back(30);
+//	l.push_front(3);
+//	l.push_front(1);
+//	l.push_front(8);
+//	//auto p = high(l.begin(), l.end());
+//	//std::cout << *p;
+//	auto p = l.begin();
+//	//l.insert(p, 15);
+//	//++p;
+//	//l.insert(p, 18);
+//	//p = l.begin();
+//	while (p != l.end())
+//	{
+//		std::cout << *p << ' ';
+//		++p;
+//		std::cout << "\nfront: " << l.front()
+//			<< "\nback: " << l.back() << '\n';
+//		l.pop_back();
+//		l.pop_front();
+//		p = l.begin();
+//	}
+//}
+
+//Exercise 15, 16 ---------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+class Allocator
+{
+public:
+	T** allocate(int n);
+	void deallocate(T** p, int n);
+	void construct(T* p, const T& v);
+	void destroy(T* p);
+};
+
+template<typename T>
+T** Allocator<T>::allocate(int n)
+{
+	T** new_arr = new T * [n];
+	for (int i{}; i < n; i++)
+		new_arr[i] = new T{};
+	return new_arr;
+
+	//void* ptr = malloc(n * sizeof(T));
+	//if (!ptr)
+	//	throw std::runtime_error("Cannot allocate uninitialized memory");
+	//return static_cast<T*>(ptr);
+}
+
+template<typename T>
+void Allocator<T>::deallocate(T** p, int n)
+{
+	if (p)
+	{
+		for (int i{ 0 }; i < n; i++)
+			delete p[i];
+		delete[] p;
+	}
+
+	//free(p);
+}
+
+template<typename T>
+void Allocator<T>::construct(T* p, const T& v)
+{
+	//p = new T{ v };
+	new(p) T{ v };			//try-catch block??
+}
+
+template<typename T>
+void Allocator<T>::destroy(T* p)
+{
+	delete p;
+	p = nullptr;
+	//p = nullptr;
+	//p->~T();
+}
+
+template<typename T, typename A = Allocator<T>>
+class Vector
+{
+private:
+	A alloc;
+	int sz;
+	T** elem;
+	int space;
+public:
+	Vector() : sz{ 0 }, elem{ nullptr }, space{0}
+	{}
+	explicit Vector(int s) : sz{ 0 }, elem{ alloc.allocate(s)}, space{ s }
+	{
+		for (int i = 0; i < sz; ++i)
+			elem[i] = new int{ 0 };
+	}
+	Vector(const Vector&);
+	Vector& operator=(const Vector&);
+	Vector(Vector&&);
+	Vector& operator=(Vector&&);
+	~Vector()
+	{
+		alloc.deallocate(elem, space);
+	}
+	T* operator[](int n)
+	{
+		return elem[n];
+	}
+	const T& operator[](int n) const
+	{
+		return elem[n];
+	}
+	int size() const
+	{
+		return sz;
+	}
+	int capacity() const
+	{
+		return space;
+	}
+	void resize(int newsize, T val = T());
+	void push_back(const T& d);
+	void reserve(int newalloc);
+};
+
+template<typename T, typename A>
+Vector<T, A>::Vector(const Vector<T,A>& v)
+	: sz{v.sz}, elem{ alloc.allocate(v.sz)}
+{
+	std::copy(v, v + sz, elem);
+}
+
+template<typename T, typename A>
+Vector<T, A>& Vector<T, A>::operator=(const Vector<T, A>& v)
+{
+	if (this = &v) return *this;
+	T** p = alloc.allocate(v.sz);
+	copy(v.elem, v.elem + v.sz, p);
+	alloc.deallocate(elem, elem);
+	elem = p;
+	sz = v.sz;
+	return *this;
+}
+
+template<typename T, typename A>
+Vector<T, A>::Vector(Vector<T,A>&& v)
+	: sz{v.sz}, elem{v.elem}
+{
+	v.elem = nullptr;
+}
+
+template<typename T, typename A>
+Vector<T, A>& Vector<T, A>::operator=(Vector&& v)
+{
+	alloc.deallocate(elem, elem);
+	elem = v.elem;
+	sz = v.sz;
+	v.elem = nullptr;
+	return *this;
+}
+
+template<typename T, typename A>
+void Vector<T, A>::reserve(int newalloc)
+{
+	if (newalloc <= space) return;
+	T** p = alloc.allocate(newalloc);
+	for (int i{0}; i < sz; ++i)
+		alloc.construct(p[i], *elem[i]);
+	//for (int i{0}; i < sz; ++i)
+	//	alloc.destroy(elem[i]);
+	alloc.deallocate(elem, space);
+	elem = p;
+	space = newalloc;
+}
+
+template<typename T, typename A>
+void Vector<T, A>::push_back(const T& val)
+{
+	if (space == 0) reserve(8);
+	else if (sz == space) reserve(2 * space);
+	alloc.construct(elem[sz], val);
+	++sz;
+}
+
+template<typename T, typename A>
+void Vector<T, A>::resize(int newsize, T val)
+{
+	reserve(newsize);
+	for (int i{ sz }; i < newsize; ++i)
+		alloc.construct(elem[i], val);
+	for (int i{ newsize }; i < sz; ++i)
+		alloc.destroy(elem[i]);
+	sz = newsize;
+}
+
+//int main()
+//{
+//	//int** arr = new int* [10];
+//	//for (int i{ 0 }; i < 10; i++)
+//	//	arr[i] = new int{ i };
+//	//for (int i{ 0 }; i < 10; i++)
+//	//{
+//	//	if (i == 0)
+//	//		std::cout << arr << '\n';
+//	//	std::cout << *(*(arr + i)) << '\n';
+//	//}
+//	//for (int i{}; i < 10; i++)
+//	//	delete *(arr + i);
+//	//delete[] arr;
+//
+//	Vector<int> v;
+//	for (int i{}; i < 10; i++)
+//		v.push_back(i);
+//	for (int i{ 0 }; i < v.size(); i++)
+//		std::cout << *v[i] << '\n';
+//}
+
+//Exercise 20 ---------------------------------------------------------------------------------------------------------------------
+
 int main()
 {
-	List<int> l;
-	l.push_back(100);
-	l.push_back(20);
-	l.push_back(30);
-	l.push_front(3);
-	l.push_front(1);
-	l.push_front(8);
-	auto p = high(l.begin(), l.end());
-	std::cout << *p;
-	//auto p = l.begin();
-	//l.insert(p, 15);
-	//++p;
-	//l.insert(p, 18);
-	while (p != l.end())
-	{
-		std::cout << *p << ' ';
-		++p;
-	}
+	const unsigned long c = 10000000;
+
+	auto t1 = std::chrono::system_clock::now();
+	std::vector<unsigned long> v;
+	for (unsigned long i{}; i < c; i++)
+		v.push_back(i);
+	auto d1 = std::chrono::system_clock::now();
+	std::cout << "vector: " << std::chrono::duration_cast<std::chrono::microseconds>(d1 - t1).count();
+	
+	std::cout << '\n';
+
+	auto t2 = std::chrono::system_clock::now();
+	std::list<unsigned long> l;
+	for (unsigned long i{}; i < c; i++)
+		l.push_back(i);
+	auto d2 = std::chrono::system_clock::now();
+	std::cout << "list: " << std::chrono::duration_cast<std::chrono::microseconds>(d2 - t2).count();
 }
