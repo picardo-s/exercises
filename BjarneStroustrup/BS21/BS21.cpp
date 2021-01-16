@@ -7,6 +7,7 @@
 #include <fstream>
 #include <algorithm>
 #include <functional>
+#include <string>
 
 //Exercises 0.1 ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -371,14 +372,129 @@ void print_map(const std::map<std::string, int>& m)
 				std::cout << p.second << ": " << p.first << '\n';
 }
 
-int main()
-{
-	std::map<std::string, int> words;
-	for (std::string s; std::cin >> s;)
-		++words[s];
-	for (const auto& p : words)
-		std::cout << p.first << ": " << p.second << '\n';
-	print_map(words);
-}
+//int main()
+//{
+//	std::map<std::string, int> words;
+//	for (std::string s; std::cin >> s;)
+//		++words[s];
+//	for (const auto& p : words)
+//		std::cout << p.first << ": " << p.second << '\n';
+//	print_map(words);
+//}
 
 //Exercises 9 ---------------------------------------------------------------------------------------------------------------------------------
+
+constexpr char SPEC_SYMB = '*';
+
+struct Birth_date
+{
+	int month;
+	int day;
+	int year;
+};
+
+std::istream& operator>>(std::istream& is, Birth_date& date)
+{
+	int m{}, d{}, y{};
+	is >> m >> d >> y;
+	date = { m, d, y };
+	return is;
+}
+
+struct Purchase
+{
+	std::string name;
+	double unit_price;
+	int count;
+};
+
+std::istream& operator>>(std::istream& is, Purchase& p)
+{
+	std::string name{};
+	double pr{};
+	int c;
+	char symb{};
+
+	is >> symb;
+	if (symb == SPEC_SYMB)
+	{
+		std::getline(is, name);
+		is >> pr >> c;
+		p = { name, pr, c };
+	}
+	else if(is)
+	{
+		is.unget();
+		is.clear(std::ios_base::failbit);
+	}
+	return is;
+}
+
+class Order
+{
+private:
+	std::string name;
+	std::string addres;
+	Birth_date b_date;
+	std::vector<Purchase> purch;
+public:
+	Order() : name{ "N/A" }, addres{ "N/A" }, b_date{ 1, 1, 1900 } {};
+	Order(const std::string& nm, const std::string& addr, const Birth_date& b_d,
+		const std::vector<Purchase>& v_p) : name{ nm }, addres{ addr }, b_date{ b_d }, purch{ v_p }
+	{};
+	friend std::ostream& operator<<(std::ostream& os, const Order& ord);
+};
+
+std::ostream& operator<<(std::ostream& os, const Order& ord)
+{
+	os << "\nName: " << ord.name
+		<< "\nAddres: " << ord.addres
+		<< "\nBirth date: " << ord.b_date.month << "." << ord.b_date.day << "." << ord.b_date.year
+		<< "\nPurchases:\n";
+	for (auto& elem : ord.purch)
+		os << elem.name << '\t' << elem.unit_price << '\t' << elem.count << '\n';
+	return os;
+}
+
+std::vector<Order> read_from_file()
+{
+	std::string file_name{};
+	std::cout << "Enter a file name to read: ";
+	std::cin >> file_name;
+
+	std::ifstream file{ file_name };
+	if (!file)
+		throw std::runtime_error("Wrong file direction");
+
+	std::string name;
+	std::string addres;
+	Birth_date date;
+	std::vector<Purchase> v_purch;
+	std::vector<Order> v_order;
+
+	while (1)
+	{
+		std::getline(file, name);
+		std::getline(file, addres);
+		file >> date;
+		for (Purchase p; file >> p;)
+			v_purch.push_back(p);
+		v_order.push_back({ name, addres, date, v_purch });
+		v_purch.clear();
+		if (file.eof() || file.bad())
+			break;
+		else file.clear();
+	}
+	return v_order;
+}
+
+int main()
+{
+	//std::vector<Purchase> v{ {"orange", 12.2, 5}, {"apple", 102.2, 123}, {"Melon", 0.5, 3} };
+	//Order order{ "Mark", "Ocean beach 123, Yamaha", {1, 16, 1991}, v };
+	//std::cout << order;
+
+	std::vector<Order> v{ read_from_file() };
+	for (auto& elem : v)
+		std::cout << elem;
+}
