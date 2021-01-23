@@ -442,6 +442,10 @@ public:
 	Order(const std::string& nm, const std::string& addr, const Birth_date& b_d,
 		const std::vector<Purchase>& v_p) : name{ nm }, addres{ addr }, b_date{ b_d }, purch{ v_p }
 	{};
+	std::string get_name() const { return name; };
+	std::string get_addres() const { return addres; };
+	Birth_date get_date() const { return b_date; };
+	const std::vector<Purchase>& get_purchases() const { return purch; };
 	friend std::ostream& operator<<(std::ostream& os, const Order& ord);
 };
 
@@ -456,13 +460,18 @@ std::ostream& operator<<(std::ostream& os, const Order& ord)
 	return os;
 }
 
-std::vector<Order> read_from_file()
+std::string get_file_name()
 {
 	std::string file_name{};
-	std::cout << "Enter a file name to read: ";
-	std::cin >> file_name;
+	std::getline(std::cin, file_name);
+	return file_name;
+}
 
-	std::ifstream file{ file_name };
+template<typename C>
+void read_from_file(C& cont)
+{
+	std::cout << "Enter a file's name to read: ";
+	std::ifstream file{ get_file_name() };
 	if (!file)
 		throw std::runtime_error("Wrong file direction");
 
@@ -470,7 +479,7 @@ std::vector<Order> read_from_file()
 	std::string addres;
 	Birth_date date;
 	std::vector<Purchase> v_purch;
-	std::vector<Order> v_order;
+	//std::vector<Order> v_order;
 
 	while (1)
 	{
@@ -479,22 +488,62 @@ std::vector<Order> read_from_file()
 		file >> date;
 		for (Purchase p; file >> p;)
 			v_purch.push_back(p);
-		v_order.push_back({ name, addres, date, v_purch });
+		cont.push_back({ name, addres, date, v_purch });
 		v_purch.clear();
 		if (file.eof() || file.bad())
 			break;
 		else file.clear();
 	}
-	return v_order;
+	//return v_order;
+}
+
+template<typename C>
+void write_into_file(const C& cont)
+{
+	std::cout << "Enter a file's name to write: ";
+	std::ofstream file{ get_file_name() };
+	if (!file)
+		throw std::runtime_error("Wrong file direction");
+
+	std::string name;
+	std::string addres;
+	Birth_date date;
+
+	for (auto& elem : cont)
+	{
+		name = elem.get_name();
+		addres = elem.get_addres();
+		date = elem.get_date();
+		std::vector<Purchase> temp = elem.get_purchases();
+
+		file << name << '\n' << addres << '\n'
+			<< date.month << ' ' << date.day << ' ' << date.year << '\n';
+		for (auto& elem : temp)
+			file << SPEC_SYMB << elem.name << '\n'
+			<< elem.unit_price << ' ' << elem.count << '\n';
+		file << '\n';
+	}
 }
 
 int main()
 {
-	//std::vector<Purchase> v{ {"orange", 12.2, 5}, {"apple", 102.2, 123}, {"Melon", 0.5, 3} };
-	//Order order{ "Mark", "Ocean beach 123, Yamaha", {1, 16, 1991}, v };
-	//std::cout << order;
+	std::vector<Order> v;
+	read_from_file(v);
+	std::sort(v.begin(), v.end(), [](const Order& a, const Order& b) {return a.get_name() < b.get_name(); });
+	write_into_file(v);
 
-	std::vector<Order> v{ read_from_file() };
-	for (auto& elem : v)
-		std::cout << elem;
+	std::list<Order> list;
+	read_from_file(list);
+	//for (auto& elem : list)
+	//	std::cout << elem;
+	//std::sort(list.begin(), list.end(), [](const Order& a, const Order& b) {return a.get_addres() < b.get_addres(); });
+	list.sort([](const Order& a, const Order& b) {return a.get_addres() < b.get_addres(); });
+	std::cout << "\n-------------------------------------------------------------------------";
+	//for (auto& elem : list)
+	//	std::cout << elem;
+	write_into_file(list);
+
+	std::vector<Order> total;
+	for (auto& elem : list)
+	std::cout << elem;
 }
