@@ -8,27 +8,27 @@
 
 //Exercise 0.1 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-int main()
-{
-	std::ifstream in{ "file.txt" };
-	if (!in)
-		throw std::runtime_error("Cannot open the file");
-
-	std::regex pat{ R"(\w{2}\s*\d{5}(-\d{4})?)" };
-	
-	int lineno{ 0 };
-	for (std::string line{}; std::getline(in, line);)
-	{
-		++lineno;
-		std::smatch matches;
-		if (std::regex_search(line, matches, pat))
-		{
-			std::cout << lineno << ": " << matches[0] << '\n';
-			if (1 < matches.size() && matches[1].matched)
-				std::cout << "\t:" << matches[1] << '\n';
-		}
-	}
-}
+//int main()
+//{
+//	std::ifstream in{ "file.txt" };
+//	if (!in)
+//		throw std::runtime_error("Cannot open the file");
+//
+//	std::regex pat{ R"(\w{2}\s*\d{5}(-\d{4})?)" };
+//	
+//	int lineno{ 0 };
+//	for (std::string line{}; std::getline(in, line);)
+//	{
+//		++lineno;
+//		std::smatch matches;
+//		if (std::regex_search(line, matches, pat))
+//		{
+//			std::cout << lineno << ": " << matches[0] << '\n';
+//			if (1 < matches.size() && matches[1].matched)
+//				std::cout << "\t:" << matches[1] << '\n';
+//		}
+//	}
+//}
 
 //Exercise 1 --------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ Mail_file::Mail_file(const std::string& n)
 
 int is_prefix(const std::string& s, const std::string& p)
 {
-	int n{ p.size() };
+	auto n{ p.size() };
 	if (std::string(s, 0, n) == p)
 		return n;
 	return 0;
@@ -101,10 +101,13 @@ bool find_from_addr(const Message* m, std::string& s)
 
 std::string find_subject(const Message* m)
 {
-
+	for (const auto& x : *m)
+		if (int n = is_prefix(x, "Subject: "))
+			return std::string(x, n);
+	return "";
 }
 
-main()
+int main()
 {
 	Mail_file mfile("my_mail_file.txt");
 
@@ -121,5 +124,4 @@ main()
 
 	for (auto p = pp.first; p != pp.second; ++p)
 		std::cout << find_subject(p->second) << '\n';
-
 }
